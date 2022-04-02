@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ReactiveProperty
 {
@@ -30,6 +31,15 @@ namespace ReactiveProperty
         public static IProperty<T> CreateProperty<T>(T initialValue=default)
         {
             return new Property<T>(initialValue);
+        }
+
+        public static IObservableCommand<TInput, TOutput> CreateCommand<TInput, TOutput>(
+            Func<TInput, Task<TOutput>> execute,
+            IReadOnlyProperty<bool> isEnabled,
+            Predicate<TInput> canExecuteOnInput = null,
+            TOutput initialValue = default)
+        {
+            return new ObservableCommand<TInput, TOutput>(execute, isEnabled, canExecuteOnInput, initialValue);
         }
     }
 }

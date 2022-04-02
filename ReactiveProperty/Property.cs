@@ -6,7 +6,7 @@ using System.Reactive.Subjects;
 
 namespace ReactiveProperty
 {
-    public class Property<T> : IProperty<T>
+    internal class Property<T> : IProperty<T>
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -15,7 +15,7 @@ namespace ReactiveProperty
         private T _value;
         private readonly ISubject<T> _subject = new ReplaySubject<T>(1);
 
-        internal Property(T value = default)
+        public Property(T value = default)
         {
             Value = value;
             _subject.OnNext(value);

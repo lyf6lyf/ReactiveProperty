@@ -5,6 +5,7 @@ using Windows.UI.Xaml.Controls;
 using ReactiveProperty;
 
 using static ReactiveProperty.PropertyEx;
+using System.Threading.Tasks;
 
 namespace UI
 {
@@ -18,7 +19,13 @@ namespace UI
 
         public IReadOnlyProperty<int> Number3 { get; }
 
-        public IReadOnlyProperty<Timestamped<long>> Timer { get; set; }
+        public IReadOnlyProperty<Timestamped<long>> Timer { get; }
+
+        //Command
+
+        public IProperty<bool> IsCommandEnabled { get;}
+
+        public IObservableCommand<string, int> Command { get; }
 
         public MainPage()
         {
@@ -34,6 +41,16 @@ namespace UI
                 .Timestamp()
                 .ObserveOnCoreDispatcher()
                 .ToProperty();
+
+            IsCommandEnabled = CreateProperty(false);
+            Command = CreateCommand<string, int>(async s =>
+                {
+                    await Task.Delay(2000);
+                    return int.Parse(s);
+                },
+                IsCommandEnabled,
+                s => int.TryParse(s, out _),
+                0);
         }
 
     }

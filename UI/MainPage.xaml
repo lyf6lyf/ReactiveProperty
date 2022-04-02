@@ -9,21 +9,52 @@
     mc:Ignorable="d">
 
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <Grid>
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Orientation="Horizontal">
+                <TextBox Text="{x:Bind Number1.Value, Mode=TwoWay}" />
+                <TextBlock VerticalAlignment="Center">+</TextBlock>
+                <TextBox Text="{x:Bind Number2.Value, Mode=TwoWay}" />
+                <TextBlock VerticalAlignment="Center">=</TextBlock>
+                <TextBlock VerticalAlignment="Center" Text="{x:Bind Number3.Value, Mode=OneWay}" />
+            </StackPanel>
+
+            <TextBlock
+                Margin="40"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Text="{x:Bind Timer.Value.ToString(), Mode=OneWay}" />
+        </Grid>
+
         <StackPanel
+            Grid.Column="1"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Orientation="Horizontal">
-            <TextBox Text="{x:Bind Number1.Value, Mode=TwoWay}" />
-            <TextBlock>+</TextBlock>
-            <TextBox Text="{x:Bind Number2.Value, Mode=TwoWay}" />
-            <TextBlock>=</TextBlock>
-            <TextBlock Text="{x:Bind Number3.Value, Mode=OneWay}" />
-        </StackPanel>
+            Spacing="20">
+            <TextBox
+                x:Name="para"
+                Header="Command Parameter"
+                Text="abc" />
+            <ToggleSwitch Header="Command Enabled" IsOn="{x:Bind IsCommandEnabled.Value, Mode=TwoWay}" />
+            <Button Command="{x:Bind Command}" CommandParameter="{x:Bind para.Text, Mode=OneWay}">Run Command</Button>
+            <Button Command="{x:Bind Command}" CommandParameter="2">Button 2</Button>
+            <Button Command="{x:Bind Command}" CommandParameter="a">Button a</Button>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>Executing:</TextBlock>
+                <TextBlock Text="{x:Bind Command.IsExecuting.Value, Mode=OneWay}" />
+            </StackPanel>
 
-        <TextBlock
-            Margin="40"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Bottom"
-            Text="{x:Bind Timer.Value.ToString(), Mode=OneWay}" />
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>Result:</TextBlock>
+                <TextBlock Text="{x:Bind Command.Value, Mode=OneWay}" />
+            </StackPanel>
+        </StackPanel>
     </Grid>
+
 </Page>
