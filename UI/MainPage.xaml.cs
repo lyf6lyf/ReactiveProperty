@@ -27,6 +27,8 @@ namespace UI
 
         public IObservableCommand<string, int> Command { get; }
 
+        public IReadOnlyProperty<int> FinalResult { get; }
+
         public MainPage()
         {
             InitializeComponent();
@@ -51,6 +53,8 @@ namespace UI
                 IsCommandEnabled,
                 s => int.TryParse(s, out _),
                 0);
+
+            FinalResult = Number3.CombineLatest(Command, (x, y) => x + y).ToProperty();
         }
 
     }

@@ -27,8 +27,8 @@
 
             <TextBlock
                 Margin="40"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Bottom"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
                 Text="{x:Bind Timer.Value.ToString(), Mode=OneWay}" />
         </Grid>
 
@@ -54,6 +54,16 @@
                 <TextBlock>Result:</TextBlock>
                 <TextBlock Text="{x:Bind Command.Value, Mode=OneWay}" />
             </StackPanel>
+        </StackPanel>
+
+        <StackPanel
+            Grid.ColumnSpan="2"
+            Margin="40"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            Orientation="Horizontal">
+            <TextBlock>Final Result:</TextBlock>
+            <TextBlock Text="{x:Bind FinalResult.Value, Mode=OneWay}" />
         </StackPanel>
     </Grid>
 

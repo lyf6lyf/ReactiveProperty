@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace ReactiveProperty
 {
-    public interface IObservableCommand<in TInput, TOutput> : IProperty<TOutput>, ICommand
+    public interface IObservableCommand<in TInput, TOutput> : IReadOnlyProperty<TOutput>, ICommand
     {
         IReadOnlyProperty<bool> IsEnabled { get; }
 

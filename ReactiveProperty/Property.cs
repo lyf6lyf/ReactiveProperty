@@ -1,43 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
-
-namespace ReactiveProperty
+﻿namespace ReactiveProperty
 {
-    internal class Property<T> : IProperty<T>
+    internal sealed class Property<T> : PropertySubject<T>, IProperty<T>
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private static readonly PropertyChangedEventArgs ValuePropertyChangedEventArgs = new PropertyChangedEventArgs(nameof(Value));
-
-        private T _value;
-        private readonly ISubject<T> _subject = new ReplaySubject<T>(1);
-
-        public Property(T value = default)
+        public Property(T value = default) : base(value)
         {
-            Value = value;
-            _subject.OnNext(value);
         }
-
-        public IDisposable Subscribe(IObserver<T> observer)
-        {
-            return _subject.Subscribe(observer);
-        }
-
-        public T Value
-        {
-            get => _value;
-            set
-            {
-                if (!EqualityComparer<T>.Default.Equals(_value, value))
-                {
-                    _value = value;
-                    PropertyChanged?.Invoke(this, ValuePropertyChangedEventArgs);
-                    _subject.OnNext(_value);
-                }
-            }
-        }
+        public new T Value { get => base.Value; set => base.Value = value; }
     }
 }
