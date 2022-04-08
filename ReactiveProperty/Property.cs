@@ -1,10 +1,40 @@
-﻿namespace ReactiveProperty
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Reactive.Subjects;
+
+namespace ReactiveProperty
 {
-    internal sealed class Property<T> : PropertySubject<T>, IProperty<T>
+    internal class Property<T> : IProperty<T>
     {
-        public Property(T value = default) : base(value)
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private T _value;
+        private readonly ISubject<T> _subject = new ReplaySubject<T>(1);
+
+        public Property(T value = default)
         {
+            Value = value;
+            _subject.OnNext(value);
         }
-        public new T Value { get => base.Value; set => base.Value = value; }
+
+        public IDisposable Subscribe(IObserver<T> observer)
+        {
+            return _subject.Subscribe(observer);
+        }
+
+        public T Value
+        {
+            get => _value;
+            set
+            {
+                if (!EqualityComparer<T>.Default.Equals(_value, value))
+                {
+                    _value = value;
+                    PropertyChanged?.Invoke(this, Constants.ValuePropertyChangedEventArgs);
+                    _subject.OnNext(_value);
+                }
+            }
+        }
     }
 }

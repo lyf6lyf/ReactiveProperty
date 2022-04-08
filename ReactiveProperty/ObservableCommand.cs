@@ -7,7 +7,7 @@ using static ReactiveProperty.PropertyEx;
 
 namespace ReactiveProperty
 {
-    internal sealed class ObservableCommand<TInput, TOutput> : PropertySubject<TOutput>, IObservableCommand<TInput, TOutput>
+    internal sealed class ObservableCommand<TInput, TOutput> : Property<TOutput>, IObservableCommand<TInput, TOutput>
     {
         public event EventHandler CanExecuteChanged;
 
