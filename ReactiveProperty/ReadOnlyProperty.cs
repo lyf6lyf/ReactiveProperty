@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reactive.Linq;
+using System.Threading;
 
 namespace ReactiveProperty
 {
@@ -11,29 +12,37 @@ namespace ReactiveProperty
 
         private T _value;
         private readonly IObservable<T> _source;
+        private volatile int _initialized;
 
         public ReadOnlyProperty(T initialValue)
         {
             Value = initialValue;
             _source = Observable.Return(initialValue);
+            _initialized = 1;
         }
 
-        public ReadOnlyProperty(IObservable<T> source, bool deferSubscribe = false)
+        public ReadOnlyProperty(IObservable<T> source, bool deferSubscription)
         {
             _source = source;
-            if (!deferSubscribe)
+            if (!deferSubscription)
             {
-                SubscribeTo(_source);
-            }
-            else
-            {
-                //TODO
+                SubscribeToSource();
+                _initialized = 1;
             }
         }
 
         public T Value
         {
-            get => _value;
+            get
+            {
+
+                if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0)
+                {
+                    SubscribeToSource();
+                }
+
+                return _value;
+            }
             private set
             {
                 if (!EqualityComparer<T>.Default.Equals(_value, value))
@@ -49,11 +58,11 @@ namespace ReactiveProperty
             return _source.Subscribe(observer);
         }
 
-        private void SubscribeTo(IObservable<T> source)
+        private void SubscribeToSource()
         {
             var weakProperty = new WeakReference<ReadOnlyProperty<T>>(this);
             IDisposable disposable = null;
-            disposable = source.Subscribe(x =>
+            disposable = _source.Subscribe(x =>
             {
                 if (weakProperty.TryGetTarget(out var target))
                 {

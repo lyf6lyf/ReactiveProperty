@@ -48,11 +48,11 @@ namespace UI
             Command = CreateCommand<string, int>(async s =>
                 {
                     await Task.Delay(2000);
-                    return int.Parse(s);
+                    return int.Parse(s) * 2;
                 },
                 IsCommandEnabled,
                 s => int.TryParse(s, out _),
-                0);
+                6);
 
             FinalResult = Number3.CombineLatest(Command, (x, y) => x + y).ToProperty();
         }
