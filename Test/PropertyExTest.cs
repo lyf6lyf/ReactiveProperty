@@ -1,8 +1,7 @@
-using System;
+﻿using System;
+using System.ComponentModel;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Reactive.Subjects;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ReactiveProperty;
 
@@ -11,15 +10,17 @@ namespace Test
     [TestClass]
     public class PropertyExTest
     {
-        [TestMethod]
-        public void ToProperty_WhenPropertyIsNotUsed_ShouldBeCollected()
+        [DataRow(true)]
+        [DataRow(false)]
+        [DataTestMethod]
+        public void ToProperty_WhenPropertyIsNotUsed_ShouldBeCollected(bool deferSubscription)
         {
-            var source = Observable.Range(1, 5);
+            var source = new BehaviorSubject<int>(1);
             WeakReference weakRef = null;
 
             void Scope()
             {
-                var property = source.ToProperty();
+                var property = source.ToProperty(deferSubscription);
                 weakRef = new WeakReference(property);
             }
 
@@ -31,24 +32,69 @@ namespace Test
             GC.Collect();
 
             Assert.IsFalse(weakRef.IsAlive);
+
+            Assert.IsNotNull(source, "pin source");
         }
 
         [TestMethod]
-        public void ToProperty_WhenDeferSubscription_ShouldSubscribeWhenAccessValue()
+        public void ToProperty_WithDeferSubscription_WhenNoPropertyChangedEventHandler_ShouldBeCollected()
         {
-            var source = Observable.Range(1, 5);
-            var subscribed = false;
+            var source = new BehaviorSubject<int>(1);
+            WeakReference weakRef = null;
+
+            void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+            {
+            }
+
+            void Scope()
+            {
+                var property = source.ToProperty(true);
+                weakRef = new WeakReference(property);
+
+                property.PropertyChanged += OnPropertyChanged;
+                property.PropertyChanged -= OnPropertyChanged;
+            }
+
+            Scope();
+            Assert.IsTrue(weakRef.IsAlive);
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
+            Assert.IsFalse(weakRef.IsAlive);
+
+            Assert.IsNotNull(source, "pin source");
+        }
+
+        [TestMethod]
+        public void ToProperty_WithDeferSubscription_ShouldSubscribeWhenAddHandlerToPropertyChanged()
+        {
+            var source = new BehaviorSubject<int>(1);
+            var count = 0;
             var property = source.Select(x =>
             {
-                subscribed = true;
+                count++;
                 return x;
             }).ToProperty(true);
 
-            Assert.IsFalse(subscribed);
+            void OnPropertyChanged1(object sender, PropertyChangedEventArgs e)
+            {
+            }
+            void OnPropertyChanged2(object sender, PropertyChangedEventArgs e)
+            {
+            }
 
-            _ = property.Value;
+            property.PropertyChanged += OnPropertyChanged1;
+            property.PropertyChanged += OnPropertyChanged2;
 
-            Assert.IsTrue(subscribed);
+            Assert.AreEqual(1, count); // Should Only subscribe once;
+
+            property.PropertyChanged -= OnPropertyChanged1;
+            property.PropertyChanged -= OnPropertyChanged2;
+
+            source.OnNext(2);
+            Assert.AreEqual(1, count); // shouldn't be updated.
         }
     }
 }

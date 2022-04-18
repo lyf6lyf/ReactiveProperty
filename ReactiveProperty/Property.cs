@@ -9,30 +9,21 @@ namespace ReactiveProperty
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private T _value;
-        private readonly ISubject<T> _subject = new ReplaySubject<T>(1);
+        private readonly BehaviorSubject<T> _subject;
 
-        public Property(T value = default)
-        {
-            Value = value;
-            _subject.OnNext(value);
-        }
+        public Property(T value = default) => _subject = new BehaviorSubject<T>(value);
 
-        public IDisposable Subscribe(IObserver<T> observer)
-        {
-            return _subject.Subscribe(observer);
-        }
+        public IDisposable Subscribe(IObserver<T> observer) => _subject.Subscribe(observer);
 
         public T Value
         {
-            get => _value;
+            get => _subject.Value;
             set
             {
-                if (!EqualityComparer<T>.Default.Equals(_value, value))
+                if (!EqualityComparer<T>.Default.Equals(_subject.Value, value))
                 {
-                    _value = value;
-                    PropertyChanged?.Invoke(this, Constants.ValuePropertyChangedEventArgs);
-                    _subject.OnNext(_value);
+                    _subject.OnNext(value);
+                    PropertyChanged?.Invoke(this, InternalConstants.ValuePropertyChangedEventArgs);
                 }
             }
         }

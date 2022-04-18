@@ -6,6 +6,7 @@ using ReactiveProperty;
 
 using static ReactiveProperty.PropertyEx;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace UI
 {
@@ -21,9 +22,10 @@ namespace UI
 
         public IReadOnlyProperty<Timestamped<long>> Timer { get; }
 
-        //Command
+        public ObservableCollection<string> Collection { get; }
 
-        public IProperty<bool> IsCommandEnabled { get;}
+        // Command
+        public IProperty<bool> IsCommandEnabled { get; }
 
         public IObservableCommand<string, int> Command { get; }
 
@@ -54,8 +56,25 @@ namespace UI
                 s => int.TryParse(s, out _),
                 6);
 
-            FinalResult = Number3.CombineLatest(Command, (x, y) => x + y).ToProperty();
+            Collection = new ObservableCollection<string>();
+            Collection.Add("row1");
+            Collection.Add("row2");
+            var collectionCount = Collection.ToProperty(nameof(Collection.Count), x => x.Count);
+
+            FinalResult = Number3.CombineLatest(Command, collectionCount, (x, y, z) => x + y + z).ToProperty(true);
         }
 
+        private void AddItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            Collection.Add("row" + (Collection.Count + 1));
+        }
+
+        private void RemoveItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            if (Collection.Count > 0)
+            {
+                Collection.RemoveAt(Collection.Count - 1);
+            }
+        }
     }
 }

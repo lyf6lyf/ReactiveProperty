@@ -1,6 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace ReactiveProperty
 {
@@ -11,23 +11,22 @@ namespace ReactiveProperty
         /// </summary>
         /// <typeparam name="T">The type.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="deferSubscription">Set it true if we want to subscribe to <paramref name="source"/> when the first call to <see cref="IReadOnlyProperty{T}.Value"/></param>
-        /// <returns></returns>
-        public static IReadOnlyProperty<T> ToProperty<T>(this IObservable<T> source, bool deferSubscription = false)
-        {
-            return new ReadOnlyProperty<T>(source, deferSubscription);
-        }
+        /// <param name="subscribeWhenNeeded">
+        /// If it is true, the returned <see cref="IReadOnlyProperty{T}"/> will subscribe to <paramref name="source"/>
+        /// when the first event handler is added to <see cref="IReadOnlyProperty{T}.PropertyChanged"/>,
+        /// and dispose the subscription when all the event handler is removed.
+        /// </param>
+        /// <returns>The <see cref="IReadOnlyProperty{T}"/>.</returns>
+        public static IReadOnlyProperty<T> ToProperty<T>(this IObservable<T> source, bool subscribeWhenNeeded = false)
+            => subscribeWhenNeeded ? new LazyReadOnlyProperty<T>(source) : (IReadOnlyProperty<T>)new ReadOnlyProperty<T>(source);
 
         /// <summary>
         /// Create an <see cref="IProperty{T}"/> with initial value.
         /// </summary>
         /// <typeparam name="T">The type.</typeparam>
         /// <param name="initialValue">The initial value, optional.</param>
-        /// <returns></returns>
-        public static IProperty<T> CreateProperty<T>(T initialValue=default)
-        {
-            return new Property<T>(initialValue);
-        }
+        /// <returns>The <see cref="IProgress{T}"/>.</returns>
+        public static IProperty<T> CreateProperty<T>(T initialValue = default) => new Property<T>(initialValue);
 
         /// <summary>
         /// Create a <see cref="IObservableCommand{TInput, TOutput}"/>.
@@ -42,14 +41,53 @@ namespace ReactiveProperty
         /// It can be null if not used/needed.
         /// </param>
         /// <param name="initialValue">The initial value.</param>
-        /// <returns></returns>
+        /// <returns>The command.</returns>
         public static IObservableCommand<TInput, TOutput> CreateCommand<TInput, TOutput>(
             Func<TInput, Task<TOutput>> execute,
             IReadOnlyProperty<bool> isEnabled,
             Predicate<TInput> canExecuteOnInput = null,
-            TOutput initialValue = default)
+            TOutput initialValue = default) =>
+            new ObservableCommand<TInput, TOutput>(execute, isEnabled, canExecuteOnInput, initialValue);
+
+        /// <summary>
+        /// Generate an <see cref="IReadOnlyProperty{TOut}"/> which will be updated every time the
+        /// property <paramref name="propertyName"/> changes by calling <paramref name="transform"/>.
+        /// This callback takes your base object and transform it as you want into a <typeparamref name="TOut"/>.
+        /// </summary>
+        /// <typeparam name="TIn">The input type of the callback. **It must correspond to the actual type of src otherwise
+        /// it will fail**.</typeparam>
+        /// <typeparam name="TOut">The output type of the observable.</typeparam>
+        /// <param name="src">Your object to observe.</param>
+        /// <param name="propertyName">The name of the property you want to track.</param>
+        /// <param name="transform">The function to call each time the property changes.</param>
+        /// <returns>An observable on the property <paramref name="propertyName"/> of <paramref name="src"/>.</returns>
+        public static IReadOnlyProperty<TOut> ToProperty<TIn, TOut>(
+            this TIn src,
+            string propertyName,
+            Func<TIn, TOut> transform)
+            where TIn : INotifyPropertyChanged
         {
-            return new ObservableCommand<TInput, TOutput>(execute, isEnabled, canExecuteOnInput, initialValue);
+            var result = CreateProperty(transform(src));
+
+            var weakResult = new WeakReference<IProperty<TOut>>(result);
+            void PropertyChangedHandler(object sender, PropertyChangedEventArgs e)
+            {
+                if (weakResult.TryGetTarget(out var strongResult))
+                {
+                    if (e.PropertyName == propertyName)
+                    {
+                        strongResult.Value = transform(src);
+                    }
+                }
+                else
+                {
+                    src.PropertyChanged -= PropertyChangedHandler;
+                }
+            }
+
+            src.PropertyChanged += PropertyChangedHandler;
+
+            return result;
         }
     }
 }

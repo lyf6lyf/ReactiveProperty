@@ -12,12 +12,14 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition />
+            <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Grid>
             <StackPanel
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Orientation="Horizontal">
+                Orientation="Horizontal"
+                Spacing="4">
                 <TextBox Text="{x:Bind Number1.Value, Mode=TwoWay}" />
                 <TextBlock VerticalAlignment="Center">+</TextBlock>
                 <TextBox Text="{x:Bind Number2.Value, Mode=TwoWay}" />
@@ -50,19 +52,39 @@
                 <TextBlock Text="{x:Bind Command.IsExecuting.Value, Mode=OneWay}" />
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal" Spacing="8">
                 <TextBlock>Result:</TextBlock>
                 <TextBlock Text="{x:Bind Command.Value, Mode=OneWay}" />
             </StackPanel>
         </StackPanel>
 
         <StackPanel
-            Grid.ColumnSpan="2"
+            Grid.Column="2"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="20">
+            <ListView
+                Height="200"
+                Background="#99FFFFFF"
+                ItemsSource="{x:Bind Collection}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock>Count:</TextBlock>
+                <TextBlock Text="{x:Bind Collection.Count, Mode=OneWay}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Click="AddItem_Click">Add item</Button>
+                <Button Click="RemoveItem_Click">Remove item</Button>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel
+            Grid.ColumnSpan="3"
             Margin="40"
             HorizontalAlignment="Center"
             VerticalAlignment="Bottom"
-            Orientation="Horizontal">
-            <TextBlock>Final Result:</TextBlock>
+            Orientation="Horizontal"
+            Spacing="8">
+            <TextBlock>Total Result:</TextBlock>
             <TextBlock Text="{x:Bind FinalResult.Value, Mode=OneWay}" />
         </StackPanel>
     </Grid>
